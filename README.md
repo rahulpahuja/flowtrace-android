@@ -135,7 +135,7 @@ importantFlow.trace(
 ## 📄 License
 
 ```
-Copyright 2024 Rahul Pahuja
+Copyright 2025 Rahul Pahuja
 
 This library is free software; you can redistribute it and/or modify it 
 under the terms of the GNU Lesser General Public License as published 
