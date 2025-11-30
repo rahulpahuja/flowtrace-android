@@ -1,158 +1,151 @@
-FlowTracer 🌊
+
+---
+
+# FlowTracer 🌊
 
 A lightweight, drop-in SDK for inspecting, debugging, and monitoring Kotlin Coroutine Flows.
 
-FlowTracer eliminates the guesswork when debugging reactive streams. It wraps your existing Flows to provide detailed lifecycle logging, emission timing, thread information, and error tracking without cluttering your logic with println statements.
+FlowTracer removes the guesswork when working with reactive streams. It wraps your existing Flows and reveals detailed lifecycle logs, emission timing, threading info, and error traces—without cluttering your code with `println()`.
 
-🚀 Key Features
+---
 
-Lifecycle Awareness: Logs Start, Emit, Error, Cancellation, and Completion events.
+## 🚀 Features
 
-Timing: automatically calculates the elapsed time from subscription to emission/completion (e.g., [+150ms]).
+* **Lifecycle Awareness** – Logs **Start**, **Emit**, **Error**, **Cancellation**, and **Completion**.
+* **Timing Metrics** – Automatically shows elapsed time since subscription (e.g., `+150ms`).
+* **Hot Flow Support** – Instantly inspects:
 
-Hot Flow Support: Instantly inspects StateFlow current values and SharedFlow replay cache sizes upon collection.
+  * `StateFlow`: current value
+  * `SharedFlow`: replay cache size
+* **Thread Visibility** – Displays the dispatcher/thread handling your flow.
+* **Analytics Hooks** – Send flow events to Firebase, Segment, or any analytics backend.
+* **Zero Dependencies** – Pure Kotlin. Works on **Android**, **Backend**, and **Multiplatform**.
+* **Single File** – Drop it directly into your project.
 
-Thread Info: See exactly which thread/dispatcher your flow is operating on.
+---
 
-Analytics Hooks: Pipe flow events to your analytics provider (Firebase, Segment, etc.) to debug production issues.
+## 📦 Installation
 
-Zero Dependencies: Pure Kotlin. Works on Android, Backend, and Multiplatform.
+### **Option 1: Direct Copy (Recommended & Easiest)**
 
-📦 Installation
+Simply copy **`FlowTrace.kt`** into:
 
-Option 1: Copy the File (Easiest)
+```
+com.rahulpahuja.flowtracer
+```
 
-Since FlowTrace is a single file, you can simply copy FlowTrace.kt into your project package com.rahulpahuja.flowtracer.
+### **Option 2: JitPack (If publishing the repo)**
 
-Option 2: JitPack (If you host this repo)
-
-Add the repository to your build file:
-
+```gradle
 repositories {
-    maven { url = uri("[https://jitpack.io](https://jitpack.io)") }
+    maven { url = uri("https://jitpack.io") }
 }
 
 dependencies {
     implementation("com.github.YourUsername:FlowTracer:Tag")
 }
+```
 
+---
 
-⚡ Usage
+## ⚡ Usage
 
-1. Initialization (Android Example)
+### **1. Initialization (Android Example)**
 
-Initialize the SDK in your Application class or main entry point. You can pipe logs to Logcat instead of standard output.
-
-// Android Application class
+```kotlin
+// In Application class
 FlowTrace.init(
-    enabled = BuildConfig.DEBUG, // Disable in release automatically
+    enabled = BuildConfig.DEBUG,   // Auto-disable in release
     showThreads = true,
-    customLogger = { tag, msg -> 
-        Log.d("FlowTrace-$tag", msg) 
+    customLogger = { tag, msg ->
+        Log.d("FlowTrace-$tag", msg)
     }
 )
+```
 
+---
 
-2. Basic Tracing
+### **2. Basic Tracing**
 
-Simply add .trace("Tag") to any flow chain.
+Add `.trace("Tag")` to any flow:
 
+```kotlin
 userRepository.getUserStream()
     .map { it.toUiModel() }
-    .trace("UserFlow") // <--- Add this line
+    .trace("UserFlow")
     .onEach { updateUi(it) }
     .launchIn(viewModelScope)
+```
 
+**Output Example:**
 
-Output:
-
+```
 FlowTrace-UserFlow: 🟢 START [T: main]
 FlowTrace-UserFlow: ⬇️ EMIT [+24ms] -> Value: UiUser(name=Rahul) [T: main]
 FlowTrace-UserFlow: 🏁 COMPLETE [+100ms] -> Finished successfully [T: main]
+```
 
+---
 
-3. Watching without Collecting
+### **3. Watching Without Collecting**
 
-If you just want to keep a stream active in a scope and debug it (without manually writing .launchIn), use watchIn.
+Use `watchIn()` to observe a hot flow without manually writing `.launchIn()`:
 
-// In a ViewModel
+```kotlin
 someHotFlow.watchIn(viewModelScope, "HotStreamWatcher")
+```
 
+---
 
-4. Advanced: Analytics Integration
+### **4. Analytics Integration**
 
-You can route flow events to an analytics backend to track flow health in production.
+Pipe FlowTracer events to your analytics provider:
 
+```kotlin
 FlowTrace.analyticsReporter = { eventName, params ->
-    // Example: Firebase Analytics
-    FirebaseAnalytics.getInstance(context).logEvent(eventName, params.toBundle())
+    FirebaseAnalytics.getInstance(context)
+        .logEvent(eventName, params.toBundle())
 }
+```
 
-// Enable reporting for specific critical flows
+Enable emission reporting for critical flows:
+
+```kotlin
 importantFlow.trace(
-    tag = "CriticalData", 
+    tag = "CriticalData",
     reportEmissions = true
 ).launchIn(scope)
+```
 
+---
 
-🔍 Log Format Guide
+## 🔍 Log Format
 
-Icon
+| Icon | Type     | Meaning                   |
+| ---- | -------- | ------------------------- |
+| 🟢   | START    | Flow collection started   |
+| ℹ️   | INFO     | Hot flow stats logged     |
+| ⬇️   | EMIT     | Value emitted with timing |
+| 🔴   | ERROR    | Flow threw an exception   |
+| 🚫   | CANCEL   | Flow was cancelled        |
+| 🏁   | COMPLETE | Flow completed normally   |
 
-Meaning
+---
 
-Description
+## 📄 License
 
-🟢
-
-START
-
-The flow has been collected.
-
-ℹ️
-
-INFO
-
-Stats for StateFlow (Current Value) or SharedFlow (Replay Cache).
-
-⬇️
-
-EMIT
-
-A value was emitted. Shows time elapsed since start.
-
-🔴
-
-ERROR
-
-The flow threw an exception.
-
-🚫
-
-CANCEL
-
-The flow was cancelled (e.g., Scope died).
-
-🏁
-
-COMPLETE
-
-The flow finished successfully.
-
-📄 License
-
+```
 Copyright 2024 Rahul Pahuja
 
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation; either
-version 2.1 of the License, or (at your option) any later version.
+This library is free software; you can redistribute it and/or modify it 
+under the terms of the GNU Lesser General Public License as published 
+by the Free Software Foundation; either version 2.1 of the License, or 
+(at your option) any later version.
 
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+This library is distributed in the hope that it will be useful, but 
+WITHOUT ANY WARRANTY; without even the implied warranty of 
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
 Lesser General Public License for more details.
+```
 
-You should have received a copy of the GNU Lesser General Public
-License along with this library; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+---
